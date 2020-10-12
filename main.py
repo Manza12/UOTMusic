@@ -1,14 +1,21 @@
 # This is the main script from the project:
 # Unbalanced Optimal Transport for Sound Synthesis
-import sounddevice as sd
-from synthesis import additive_synthesis
+
+import numpy as np
+from synthesis import phase_vocoder
+from play import play_sound
 from parameters import *
 
 if __name__ == '__main__':
-    frequencies = [440, 660]
-    amplitudes = [1, 0.5]
+    # Create the time array
+    t = np.arange(0, N) / fs
 
-    y = additive_synthesis(frequencies, amplitudes)
+    # Create the frequencies and the amplitudes
+    frequencies_tensor = np.stack((np.interp(t, [0, 1], [440, 880]), np.interp(t, [0, 1], [660, 1320])))
+    amplitudes_tensor = np.stack((np.ones(N), np.ones(N)))
 
-    sd.play(master_volume * y, fs)
-    status = sd.wait()
+    # Generate the sound
+    y = phase_vocoder(frequencies_tensor, amplitudes_tensor)
+
+    # Play the sound
+    play_sound(y)
