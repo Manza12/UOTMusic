@@ -1,12 +1,12 @@
 import numpy as np
+import scipy.io.wavfile as wav
+from parameters import *
 import matplotlib.pyplot as plt
 import util
+from utilities import to_mono
 
 
-plt.ion()
-plt.show()
-
-def piptrack(S, sr=44100, threshold=0.1, sub_threshold = 0.001):
+def piptrack(S, sr=44100, threshold=0.1, sub_threshold=0.001):
     '''Pitch tracking on thresholded parabolically-interpolated STFT.
 
     This implementation uses the parabolic interpolation method described by [1]_.
@@ -91,17 +91,22 @@ def piptrack(S, sr=44100, threshold=0.1, sub_threshold = 0.001):
     return pitches, mags
 
 
+if __name__ == '__main__':
+    file_name = 'do2'
+    file_path = p.join(audio_path, file_name + '.wav')
+    [fs_y, y] = wav.read(file_path)
+    start_y = 0.01  # in seconds
+    duration = 1  # in seconds
+    end_y = start_y + duration  # in seconds
+    y_segment = to_mono(y[int(fs_y * start_y): int(fs_y * end_y)])
 
+    spectrum = np.abs(np.fft.fft(y_segment))
+    spectrum_pos = spectrum[0:int(len(spectrum)/2)]
+    pitches, mags = piptrack(spectrum, sr=44100, threshold=1e4, sub_threshold=0.001)
 
+    plt.figure(1)
+    plt.plot(spectrum_pos)
+    plt.xscale('log')
+    plt.scatter(pitches, mags)
 
-
-
-
-
-
-
-
-
-
-
-
+    plt.show()
