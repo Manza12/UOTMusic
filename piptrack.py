@@ -101,11 +101,13 @@ if __name__ == '__main__':
     y_segment = to_mono(y[int(fs_y * start_y): int(fs_y * end_y)])
 
     spectrum = np.abs(np.fft.fft(y_segment))
-    spectrum_pos = spectrum[0:int(len(spectrum)/2)]
+    spectrum_pos = spectrum[0:int(len(spectrum)//2)+1]
     pitches, mags = piptrack(spectrum_pos, sr=44100, threshold=.1, sub_threshold=0.001)
 
+    freqs = np.linspace(0,fs_y / 2,int(len(spectrum)//2)+1,endpoint=True)
+
     plt.figure(1)
-    plt.plot(spectrum_pos)
+    plt.plot(freqs,spectrum_pos)
     plt.xscale('log')
     plt.scatter(pitches[np.nonzero(pitches)], mags[np.nonzero(pitches)],color='green')
 
