@@ -102,11 +102,13 @@ if __name__ == '__main__':
 
     spectrum = np.abs(np.fft.fft(y_segment))
     spectrum_pos = spectrum[0:int(len(spectrum)/2)]
-    pitches, mags = piptrack(spectrum, sr=44100, threshold=1e4, sub_threshold=0.001)
+    pitches, mags = piptrack(spectrum_pos, sr=44100, threshold=.1, sub_threshold=0.001)
 
     plt.figure(1)
     plt.plot(spectrum_pos)
     plt.xscale('log')
-    plt.scatter(pitches, mags)
+    plt.scatter(pitches[np.nonzero(pitches)], mags[np.nonzero(pitches)],color='green')
+
+
 
     plt.show()
