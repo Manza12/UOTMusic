@@ -20,7 +20,7 @@ def phase_vocoder(frequencies_tensor, amplitudes_tensor):
     assert (np.size(frequencies_tensor) == np.size(amplitudes_tensor))
 
     # Check that the second dimension of the frequencies tensor is the same as the time array
-    assert(np.size(frequencies_tensor, 1) == N)
+    assert(np.size(frequencies_tensor, 1) == N) ## Here it is actually not true, we have a lot fewer actual frequencies that N, no? Moreover the frequency tensor is only a vector (uni-dimensional)
 
     # Create the phases tensor
     phases = 2 * np.pi * np.cumsum(frequencies_tensor / fs, 1)
