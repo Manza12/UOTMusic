@@ -1,0 +1,4 @@
+# -framerate 4: 4 images per second
+# -r 30: ¿repeat frames to have 30 fps?
+# Source: https://trac.ffmpeg.org/wiki/Slideshow
+ffmpeg -framerate 12 -i interp_%d.png -c:v libx264 -r 30 -pix_fmt yuv420p animation.mp4

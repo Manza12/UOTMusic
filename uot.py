@@ -1,5 +1,7 @@
 import numpy as np
 import pylab as plt
+from parameters import *
+from utilities import create_random_dirac
 
 # plt.rcParams.update({
 #     "text.usetex": True
@@ -37,22 +39,33 @@ def scaling(c, p, q, lam=1.0, rho=1.0, tol=1e-4):
     return u, v, gamma, errs
 
 
+def create_cost(xs, ys):
+    c = np.empty((np.size(xs), np.size(ys)))
+    if cost_type == "conic":
+        for i, x in enumerate(xs):
+            for j, y in enumerate(ys):
+                c[i, j] = -2 * np.log(np.cos(np.pi * np.min((np.abs(x - y) / np.pi, 1 / 2))))
+    elif cost_type == "square":
+        for i, x in enumerate(xs):
+            for j, y in enumerate(ys):
+                c[i, j] = (x - y)**2
+    else:
+        raise ValueError("Cost type not understood.")
+
+    return c
+
+
 if __name__ == '__main__':
     _n, _m = 5, 6
-    xs, ys = np.sort(np.random.uniform(0, 1, _n)), np.sort(np.random.uniform(0, 1, _m))  # random positions
-    _p, _q = np.random.uniform(0, 1, _n), np.random.uniform(0, 1, _m)  # random weights
+    _xs, _ys, _p, _q = create_random_dirac(_n, _m)
 
     plt.figure(1)
-    plt.stem(xs, _p, linefmt="C0", markerfmt="C0o", label="\\mu", basefmt="k")
-    plt.stem(ys, _q, linefmt="C3", markerfmt="C3o", label="\\nu", basefmt="k")
+    plt.stem(_xs, _p, linefmt="C0", markerfmt="C0o", label="\\mu", basefmt="k")
+    plt.stem(_ys, _q, linefmt="C3", markerfmt="C3o", label="\\nu", basefmt="k")
     plt.legend()
 
-    _c = np.empty((np.size(xs), np.size(ys)))
-    for i, x in enumerate(xs):
-        for j, y in enumerate(ys):
-            _c[i, j] = -2 * np.log(np.cos(np.pi * np.min((np.abs(x - y) / np.pi, 1 / 2))))  # conic cost
+    _c = create_cost(_xs, _ys)
 
-    # C = [(x - y)**2 for x in xs for y in ys]  # square cost
     _u, _v, _gamma, _errs = scaling(_c, _p, _q, lam=1e-2, rho=1, tol=1e-5)
 
     plt.figure(2, figsize=[12, 3])
@@ -63,12 +76,12 @@ if __name__ == '__main__':
     plt.title("Convergence")
 
     plt.subplot(132)
-    plt.plot(xs, _u)
-    plt.plot(ys, _v, "C3")
+    plt.plot(_xs, _u)
+    plt.plot(_ys, _v, "C3")
     plt.title("Dual potentials $(u,v)$")
 
     plt.subplot(133)
-    plt.pcolor(xs, ys, np.transpose(_gamma), shading='auto')
+    plt.pcolor(_xs, _ys, np.transpose(_gamma), shading='auto')
     plt.title("Calibration measure $\\gamma$")
 
     plt.show()

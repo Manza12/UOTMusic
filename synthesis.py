@@ -35,7 +35,7 @@ def phase_vocoder(frequencies_tensor, amplitudes_tensor):
 
 
 def additive_synthesis(frequencies, amplitudes):
-    """Create a sound from fixed frequencies and amplitudes by additive synthesis.
+    """ Create a sound from fixed frequencies and amplitudes by additive synthesis.
 
         This function creates a sound from fixed frequencies and amplitudes.
 
@@ -45,7 +45,7 @@ def additive_synthesis(frequencies, amplitudes):
             Array of frequencies that form the signal.
         amplitudes : array_like
             Array of amplitudes that form the signal
-        """
+    """
 
     # Create the time array
     t = np.arange(0, N) / fs

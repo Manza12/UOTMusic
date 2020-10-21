@@ -7,29 +7,31 @@ from utilities import to_mono
 
 
 def piptrack(spectrum, sr=44100, threshold=0.1, sub_threshold=0.001):
-    """
-    Pitch tracking on thresholded parabolically-interpolated STFT.
+    """ Pitch tracking on thresholded parabolically-interpolated STFT.
 
-    This implementation uses the parabolic interpolation method described by [1].
-    .. [1] https://ccrma.stanford.edu/~jos/sasp/Sinusoidal_Peak_Interpolation.html
+        This implementation uses the parabolic interpolation method described by [1].
+        .. [1] https://ccrma.stanford.edu/~jos/sasp/Sinusoidal_Peak_Interpolation.html
 
-    Parameters
-    ----------
-    :param spectrum: numpy array [shape=(d,)]
-    magnitude or power _spectrum
-    :param sr: number > 0 [scalar]
-    audio sampling rate of `y`
-    :param threshold : float in `(0, 1)`
-    A bin in _spectrum X is considered a pitch when it is greater than
-    `threshold*X.max()`
-    :param sub_threshold: ToDo
-    :return: pitches, mags: numpy arrays [shape=(d,)]
-        Where `d` is the subset of FFT bins within `fmin` and `fmax`.
-        `pitches[f]` contains instantaneous frequency at bin
-        `f`
-        `mags[f]` contains the corresponding magnitudes.
-        Both `pitches` and `mags` take value 0 at bins
-        of non-maximal magnitude.
+        Parameters
+        ----------
+        spectrum: numpy array [shape=(d,)]
+            magnitude or power _spectrum
+        sr: number > 0 [scalar]
+            audio sampling rate of `y`
+        threshold : float in `(0, 1)`
+            A bin in _spectrum X is considered a pitch when it is greater than
+            `threshold*X.max()`
+        sub_threshold: ToDo
+
+        Returns
+        ----------
+        pitches, mags: numpy arrays [shape=(d,)]
+            Where `d` is the subset of FFT bins within `fmin` and `fmax`.
+            `pitches[f]` contains instantaneous frequency at bin
+            `f`
+            `mags[f]` contains the corresponding magnitudes.
+            Both `pitches` and `mags` take value 0 at bins
+            of non-maximal magnitude.
     """
 
     # Make sure we're dealing with magnitudes
