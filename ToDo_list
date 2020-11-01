@@ -1,9 +1,11 @@
 TO DO 
 - Numbaize all the possible numbaizable methods
-- Incorporate LaTeX to Matplotlib
-- Solve the problem of optimization error
+- Link piptrack with interpolation
+- Link interpolation with phase vocoder
 
 DONE 
 - Convert piptrack to extractor of a frequency spectrum
 - Convert algorithm from Lenaic's code
 - Convert interpolation from Lenaic's code
+- Incorporate LaTeX to Matplotlib
+- Solve the problem of optimization error

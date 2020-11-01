@@ -13,4 +13,4 @@ figures_path = path.join('data', 'figures')
 
 # Unbalanced optimal transport
 cost_type = "conic"
-create_figures = True
+create_figures = False

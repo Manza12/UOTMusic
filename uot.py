@@ -3,24 +3,18 @@ import pylab as plt
 from parameters import *
 from utilities import create_random_dirac
 
-# plt.rcParams.update({
-#     "text.usetex": True
-# })
-
 
 def scaling_update(u, p, q, c, lam, rho):
     """ One scaling iteration, starting from u """
-    temp = np.expand_dims(u, 1) - c + np.expand_dims(lam * np.log(p), 1)#tu avais mis np.expand_dims(u, 1) - c + lam * np.log(rho) <- c'etait p et pas rho
+    temp = np.expand_dims(u, 1) - c + np.expand_dims(lam * np.log(p), 1)
     m = - np.max(temp, axis=0)
-    v = (m - lam * np.log(np.sum(np.exp((np.expand_dims(m,axis=0) + temp) / lam), axis=0))) * rho / (lam + rho) #ici il fallait un expand_dims sur m
+    v = (m - lam * np.log(np.sum(np.exp((np.expand_dims(m, axis=0) + temp) / lam), axis=0))) * rho / (lam + rho)
     temp = np.expand_dims(v, 1) - np.transpose(c) + np.expand_dims(lam * np.log(q), 1)
     m = - np.max(temp, axis=0)
-    u_new = (m - lam * np.log(np.sum(np.exp((np.expand_dims(m,axis=0) + temp) / lam), axis=0))) * rho / (lam + rho) #ici il fallait un expand_dims sur m
+    u_new = (m - lam * np.log(np.sum(np.exp((np.expand_dims(m, axis=0) + temp) / lam), axis=0))) * rho / (lam + rho)
     err = np.sum(np.abs(u - u_new) * p)  # L1 norm of the gradient of the dual at (u,v)
 
     return u_new, v, err
-
-
 
 
 def scaling(c, p, q, lam=1.0, rho=1.0, tol=1e-4):
@@ -30,14 +24,14 @@ def scaling(c, p, q, lam=1.0, rho=1.0, tol=1e-4):
     """
     m, n = np.size(p), np.size(q)
     u, v = np.zeros(m), np.zeros(n)
-    errs, err = np.empty(0), 1.0 #* np.ones(1) err est un float
+    errs, err = np.empty(0), 1.0
 
     while err > tol:
         u, v, err = scaling_update(u, p, q, c, lam, rho)
-        #err = err * np.ones(1)
-        errs = np.concatenate((errs, np.array([err]))) #np.concatenate((errs, np.array(err)))
+        errs = np.concatenate((errs, np.array([err])))
 
-    gamma = np.exp((np.expand_dims(u, 1) + np.expand_dims(v, 0) - c) / lam) * np.expand_dims(p, 1) * np.expand_dims(q, 0)
+    gamma = np.exp((np.expand_dims(u, 1)
+                    + np.expand_dims(v, 0) - c) / lam) * np.expand_dims(p, 1) * np.expand_dims(q, 0)
     return u, v, gamma, errs
 
 
@@ -74,7 +68,7 @@ if __name__ == '__main__':
     plt.subplot(131)
     plt.semilogy(_errs, "k")
     plt.xlabel("niter")
-    plt.ylabel("$\\Vert \\nabla G(u,v)\\Vert_{L^1(\\mu)}$")
+    plt.ylabel("$\\Vert \\nabla G(u,v)\\Vert_{distances^1(\\mu)}$")
     plt.title("Convergence")
 
     plt.subplot(132)
