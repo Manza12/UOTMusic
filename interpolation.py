@@ -23,14 +23,14 @@ def create_distances(xs, ys):
     return dist
 
 
-def conic_interp_measures(xs, ys, p, q, ts, lam=1e-2, tol=1e-6, thr=1e-2, straight=True):
+def conic_interp_measures(xs, ys, p, q, ts, lam=1e-2, tol=1e-6, thr=1e-2, straight=STRAIGHT):
     distances = create_distances(xs, ys)  # pairwise distances
     cost = create_cost(xs, ys)  # conic cost
 
     u, v, gamma, errs = scaling(cost, p, q, lam=lam, rho=1.0, tol=tol)
 
-    gamma_a = _gamma * np.expand_dims(np.exp(u), 1)
-    gamma_b = _gamma * np.expand_dims(np.exp(v), 0)
+    gamma_a = gamma * np.expand_dims(np.exp(u), 1)
+    gamma_b = gamma * np.expand_dims(np.exp(v), 0)
 
     mask = (gamma_a + gamma_b) > thr  # mask for the (non-negligible) travelling Dirac masses
     a = np.zeros((np.sum(mask), np.size(ts)))
@@ -46,7 +46,7 @@ def conic_interp_measures(xs, ys, p, q, ts, lam=1e-2, tol=1e-6, thr=1e-2, straig
                     term_3 = 2 * ts * (1 - ts) * np.sqrt(gamma_a[i, j] * gamma_b[i, j])
                     a[k, :] = term_1 + term_2 + term_3  # * cos(distances[i,j])
                 else:
-                    # this one is the true geodesic, but it's a bit weird because the mass isn'_t monotonous
+                    # this one is the true geodesic, but it's a bit weird because the mass isn'k monotonous
                     a[k, :] = (1 - ts)**2 * gamma_a[i, j] + ts**2 * gamma_b[i, j] \
                               + 2 * ts * (1 - ts) * np.sqrt(gamma_a[i, j] * gamma_b[i, j]) * np.cos(distances[i, j])
 
@@ -83,22 +83,29 @@ if __name__ == '__main__':
     _gamma_b = _gamma * np.expand_dims(np.exp(_v), 0)
 
     # checks that its first marginal is indeed μ (up to numerical error)
-    first_marginal = np.sum(np.abs(np.sum(_gamma_a, axis=1) / _p - 1))
-    print(first_marginal)
+    first_marginal = np.sum(_gamma_a, axis=1)
+    first_marginal_error = np.sum(np.abs(first_marginal / _p - 1))
+    print("First marginal error:", first_marginal_error)
 
     # checks that its second marginal is indeed ν (up to optimization error)
-    second_marginal = np.sum(np.abs(np.sum(_gamma_b, axis=0) / _q - 1))
-    print(second_marginal)
+    second_marginal = np.sum(_gamma_b, axis=0)
+    second_marginal_error = np.sum(np.abs(second_marginal / _q - 1))
+    print("Second marginal error:", second_marginal_error)
 
     A, X = conic_interp_measures(_xs, _ys, _p, _q, _ts, lam=1e-2, tol=1e-14, thr=1e-14)
 
-    if create_figures:
+    if CREATE_FIGURES:
         for _t in range(np.size(A, 1)):
-            plt.figure(figsize=[4, 4])
-            plt.stem(_xs, _p, linefmt="C0", markerfmt="C0o", label="\\mu", basefmt="k")
-            plt.stem(_ys, _q, linefmt="C3", markerfmt="C3o", label="\\nu", basefmt="k")
-            plt.stem(X[:, _t], A[:, _t], linefmt="k", markerfmt="ko", label="\\mu_t", basefmt="k")
+            fig = plt.figure(figsize=[6, 4])
+            plt.stem(_xs, _p, linefmt="C0", markerfmt="C0o", label="\\mu", basefmt="k",
+                     use_line_collection=True)
+            plt.stem(_ys, _q, linefmt="C3", markerfmt="C3o", label="\\nu", basefmt="k",
+                     use_line_collection=True)
+            plt.stem(X[:, _t], A[:, _t], linefmt="k", markerfmt="ko", label="\\mu_t", basefmt="k",
+                     use_line_collection=True)
             plt.plot([0, 1], [0, 0], "k", lw=4)
-            plt.savefig(path.join(figures_path, "interp_" + str(_t) + ".png"))
+            plt.savefig(path.join(FIGURES_PATH, "interp_" + str(_t) + ".png"))
+
+            fig.canvas.manager.window.wm_geometry('+500+150')
 
         plt.show()

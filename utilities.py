@@ -1,5 +1,16 @@
 from pathlib import Path
 import numpy as np
+from parameters import *
+
+
+def note2freq(note, reference_frequency=REFERENCE_FREQUENCY):
+    freq = reference_frequency * np.power(2, note / 12)
+    return freq
+
+
+def freq2note(freq, reference_frequency=REFERENCE_FREQUENCY):
+    note = 12 * np.log2(freq / reference_frequency)
+    return note
 
 
 def to_mono(y):

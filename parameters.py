@@ -1,16 +1,21 @@
 import os.path as path
 # Synthesis
-fs = 44100
-duration_synthesis = 1
-N = fs*duration_synthesis
+FS = 44100
+DURATION_SYNTHESIS = 4
+N = FS * DURATION_SYNTHESIS
 
 # Play audio
-master_volume = 0.2
+MASTER_VOLUME = 0.2
+
+# Frequencies
+REFERENCE_FREQUENCY = 440  # in Hertz
+SCALE_NOTES = 12
 
 # Paths
-audio_path = path.join('data', 'audio')
-figures_path = path.join('data', 'figures')
+AUDIO_PATH = path.join('data', 'audio')
+FIGURES_PATH = path.join('data', 'figures')
 
 # Unbalanced optimal transport
-cost_type = "conic"
-create_figures = False
+COST_TYPE = "square"
+CREATE_FIGURES = True
+STRAIGHT = True

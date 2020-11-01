@@ -3,7 +3,7 @@ from parameters import *
 
 
 def play_sound(y):
-    sd.play(master_volume * y, fs)
+    sd.play(MASTER_VOLUME * y, FS)
     status = sd.wait()
 
     return status

@@ -23,7 +23,7 @@ def phase_vocoder(frequencies_tensor, amplitudes_tensor):
     assert(np.size(frequencies_tensor, 1) == N) ## Here it is actually not true, we have a lot fewer actual frequencies that N, no? Moreover the frequency tensor is only a vector (uni-dimensional)
 
     # Create the phases tensor
-    phases = 2 * np.pi * np.cumsum(frequencies_tensor / fs, 1)
+    phases = 2 * np.pi * np.cumsum(frequencies_tensor / FS, 1)
 
     # Create the components tensor
     components = amplitudes_tensor * np.sin(phases)
@@ -48,7 +48,7 @@ def additive_synthesis(frequencies, amplitudes):
     """
 
     # Create the time array
-    t = np.arange(0, N) / fs
+    t = np.arange(0, N) / FS
 
     # Create the phases tensor
     phases = 2 * np.pi * np.expand_dims(frequencies, 1) * np.expand_dims(t, 0)

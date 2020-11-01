@@ -83,7 +83,7 @@ def piptrack(spectrum, sr=44100, threshold=0.1, sub_threshold=0.001):
 
 if __name__ == '__main__':
     file_name = 'do2'
-    file_path = p.join(audio_path, file_name + '.wav')
+    file_path = p.join(AUDIO_PATH, file_name + '.wav')
     [fs_y, y] = wav.read(file_path)
     y_float = y / np.iinfo(np.int16).max
     start_y = 0.01  # in seconds

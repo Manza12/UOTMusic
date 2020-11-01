@@ -35,16 +35,17 @@ def scaling(c, p, q, lam=1.0, rho=1.0, tol=1e-4):
     return u, v, gamma, errs
 
 
-def create_cost(xs, ys):
+def create_cost(xs, ys, cost_type=COST_TYPE, scale_notes=SCALE_NOTES):
     c = np.empty((np.size(xs), np.size(ys)))
     if cost_type == "conic":
         for i, x in enumerate(xs):
             for j, y in enumerate(ys):
-                c[i, j] = -2 * np.log(np.cos(np.pi * np.min((np.abs(x - y) / np.pi, 1 / 2))))
+                c[i, j] = -2 * np.log(np.cos(np.pi * np.min((np.abs(x - y) / scale_notes,
+                                                             1 / (2 * scale_notes)))))
     elif cost_type == "square":
         for i, x in enumerate(xs):
             for j, y in enumerate(ys):
-                c[i, j] = (x - y)**2
+                c[i, j] = ((x - y) / scale_notes) ** 2
     else:
         raise ValueError("Cost type not understood.")
 
