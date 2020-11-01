@@ -14,6 +14,7 @@ SCALE_NOTES = 12
 # Paths
 AUDIO_PATH = path.join('data', 'audio')
 FIGURES_PATH = path.join('data', 'figures')
+RESULTS_PATH = 'results'
 
 # Unbalanced optimal transport
 COST_TYPE = "square"
