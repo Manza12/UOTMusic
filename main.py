@@ -1,7 +1,6 @@
 # This is the main script from the project:
 # Unbalanced Optimal Transport for Sound Synthesis
 
-import numpy as np
 import scipy.interpolate as interp
 from pathlib import Path
 from synthesis import phase_vocoder
@@ -9,15 +8,16 @@ from play import play_sound
 from parameters import *
 from interpolation import create_cost, scaling, conic_interp_measures
 from utilities import freq2note, note2freq
+from piptrack import get_data
 import pylab as plt
 import time
 import scipy.io.wavfile as wav
 import sys
 
-PLOT_MARGINALS = True
-PLOT_FIGURES = True
-PLOT_FREQUENCIES = True
-PLOT_AMPLITUDES = True
+PLOT_MARGINALS = False
+PLOT_FIGURES = False
+PLOT_FREQUENCIES = False
+PLOT_AMPLITUDES = False
 
 SAVE_INTERPOLATIONS = True
 SAVE_FIGURES = True
@@ -25,10 +25,12 @@ SAVE_SOUND = True
 
 PLAY_SOUND = True
 
-NOTE_MIN = -5
-NOTE_MAX = 17
-AMPL_MIN = 0
+NOTE_MIN = -12*3
+NOTE_MAX = 12*3
+AMPL_MIN = 1e-4
 AMPL_MAX = 1
+
+AMPL_LOG = True
 
 
 def plot_figures():
@@ -42,6 +44,8 @@ def plot_figures():
                  use_line_collection=True)
         plt.xlim(NOTE_MIN, NOTE_MAX)
         plt.ylim(AMPL_MIN, AMPL_MAX)
+        if AMPL_LOG:
+            plt.yscale('log')
         fig.canvas.manager.window.wm_geometry('+500+150')
 
         if SAVE_INTERPOLATIONS:
@@ -65,6 +69,8 @@ def plot_marginals():
     plt.legend(["$\\mu$", "$\\nu$"])
     plt.xlim(NOTE_MIN, NOTE_MAX)
     plt.ylim(AMPL_MIN, AMPL_MAX)
+    if AMPL_LOG:
+        plt.yscale('log')
     plt.title("Source and target Dirac's $(\\mu, \\nu)$")
 
     plt.subplot(212)
@@ -77,6 +83,8 @@ def plot_marginals():
     plt.legend(["$\\mu_0$", "$\\nu_0$"])
     plt.xlim(NOTE_MIN, NOTE_MAX)
     plt.ylim(AMPL_MIN, AMPL_MAX)
+    if AMPL_LOG:
+        plt.yscale('log')
     plt.title("Approximations marginals $(\\mu_0, \\nu_0)$")
 
     plt.tight_layout()
@@ -110,7 +118,8 @@ def plot_amplitudes():
     plt.xlabel("Time (s)")
     plt.ylabel("Amplitudes")
     plt.ylim(0, 1)
-    # plt.yscale('log')
+    if AMPL_LOG:
+        plt.yscale('log')
     plt.title("Amplitudes respect to time")
     if SAVE_FIGURES:
         path_to_figures = path.join(path_result, 'figures')
@@ -121,7 +130,7 @@ def plot_amplitudes():
 
 if __name__ == '__main__':
     # Create folder
-    name = "do5+do6-la4+la5"
+    name = "test_piptrack"
     path_result = path.join(RESULTS_PATH, name)
     Path(path_result).mkdir(parents=True, exist_ok=True)
     sys.stdout = open(path.join(path_result, name + '.log'), 'w')
@@ -132,9 +141,13 @@ if __name__ == '__main__':
     # Create the time array
     t_synthesis = np.arange(0, N) / FS
 
-    # Create starting frequencies and amplitudes
-    f_source, a_source = np.array([520, 1040]), np.array([0.9, 0.5])
-    f_target, a_target = np.array([440, 880]), np.array([0.8, 0.6])
+    # Source sound
+    source_name = 'do2'
+    f_source, a_source = get_data(source_name, start=0.01, duration=1.)
+
+    # Target sound
+    target_name = 'lam'
+    f_target, a_target = get_data(target_name, start=0.01, duration=1.)
 
     # Convert to notes
     n_source = freq2note(f_source)

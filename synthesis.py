@@ -1,4 +1,4 @@
-import numpy as np
+from piptrack import get_data
 from parameters import *
 from play import play_sound
 
@@ -66,8 +66,8 @@ def additive_synthesis(frequencies, amplitudes):
 
 
 if __name__ == '__main__':
-    _frequencies = [440, 660]
-    _amplitudes = [1, 0.5]
+    name = 'lam'
+    _frequencies, _amplitudes = get_data(name, start=0.01, duration=1.)
 
     _y = additive_synthesis(_frequencies, _amplitudes)
 

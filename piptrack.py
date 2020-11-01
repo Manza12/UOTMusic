@@ -6,6 +6,27 @@ import util
 from utilities import to_mono
 
 
+def get_data(file_name, start=0., duration=1., threshold=THRESHOLD_PIPTRACK):
+    y_segment = get_segment(file_name, start=start, duration=duration)
+    spectrum = np.abs(np.fft.fft(y_segment)) * (2 / len(y_segment))
+    spectrum_pos = spectrum[0:len(spectrum) // 2 + 1]
+    pitches, mags = piptrack(spectrum_pos, sr=44100, threshold=threshold, sub_threshold=0.001)
+    frequencies = pitches[np.nonzero(pitches)]
+    amplitudes = mags[np.nonzero(pitches)]
+    return frequencies, amplitudes
+
+
+def get_segment(file_name, start=0., duration=1.):
+    file_path = path.join(AUDIO_PATH, file_name + '.wav')
+    [fs_y, y] = wav.read(file_path)
+    assert fs_y == FS
+    y_float = y / np.iinfo(np.int16).max
+    end_y = start + duration
+    y_segment = to_mono(y_float[int(FS * start): int(FS * end_y)])
+
+    return y_segment
+
+
 def piptrack(spectrum, sr=44100, threshold=0.1, sub_threshold=0.001):
     """ Pitch tracking on thresholded parabolically-interpolated STFT.
 
@@ -25,12 +46,12 @@ def piptrack(spectrum, sr=44100, threshold=0.1, sub_threshold=0.001):
 
         Returns
         ----------
-        pitches, mags: numpy arrays [shape=(d,)]
+        _pitches, _mags: numpy arrays [shape=(d,)]
             Where `d` is the subset of FFT bins within `fmin` and `fmax`.
-            `pitches[f]` contains instantaneous frequency at bin
+            `_pitches[f]` contains instantaneous frequency at bin
             `f`
-            `mags[f]` contains the corresponding magnitudes.
-            Both `pitches` and `mags` take value 0 at bins
+            `_mags[f]` contains the corresponding magnitudes.
+            Both `_pitches` and `_mags` take value 0 at bins
             of non-maximal magnitude.
     """
 
@@ -82,23 +103,20 @@ def piptrack(spectrum, sr=44100, threshold=0.1, sub_threshold=0.001):
 
 
 if __name__ == '__main__':
-    file_name = 'do2'
-    file_path = p.join(AUDIO_PATH, file_name + '.wav')
-    [fs_y, y] = wav.read(file_path)
-    y_float = y / np.iinfo(np.int16).max
-    start_y = 0.01  # in seconds
-    duration = 1  # in seconds
-    end_y = start_y + duration  # in seconds
-    y_segment = to_mono(y_float[int(fs_y * start_y): int(fs_y * end_y)])
+    _file_name = 'do2'
+    _start = 0.01  # in seconds
+    _duration = 1  # in seconds
 
-    _spectrum = np.abs(np.fft.fft(y_segment)) * (2 / len(y_segment))
-    spectrum_pos = _spectrum[0:len(_spectrum) // 2 + 1]
-    _pitches, _mags = piptrack(spectrum_pos, sr=44100, threshold=.1, sub_threshold=0.001)
+    _y_segment = get_segment(_file_name, start=_start, duration=_duration)
 
-    freqs = np.linspace(0, fs_y / 2, int(len(_spectrum) // 2) + 1, endpoint=True)
+    _spectrum = np.abs(np.fft.fft(_y_segment)) * (2 / len(_y_segment))
+    _spectrum_pos = _spectrum[0:len(_spectrum) // 2 + 1]
+    _pitches, _mags = piptrack(_spectrum_pos, sr=44100, threshold=.1, sub_threshold=0.001)
+
+    freqs = np.linspace(0, FS / 2, int(len(_spectrum) // 2) + 1, endpoint=True)
 
     plt.figure(1)
-    plt.plot(freqs, spectrum_pos)
+    plt.plot(freqs, _spectrum_pos)
     plt.xscale('log')
     plt.scatter(_pitches[np.nonzero(_pitches)], _mags[np.nonzero(_pitches)], color='green')
 
