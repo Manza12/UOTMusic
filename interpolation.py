@@ -53,7 +53,7 @@ def conic_interp_measures(xs, ys, p, q, ts, lam=1e-2, tol=1e-6, thr=1e-2, straig
                 bs = np.arctan2(ts * np.sin(distances[i, j]) * np.sqrt(gamma_b[i, j]),
                                 (1. - ts) * np.sqrt(gamma_a[i, j]) + ts * np.cos(distances[i, j])
                                 * np.sqrt(gamma_b[i, j])) / distances[i, j]
-                x[k, :] = xs[i] + bs * (ys[j] - xs[i])
+                x[k, :] = xs[i] + ts * (ys[j] - xs[i]) #bs * (ys[j] - xs[i])
                 k = k + 1
 
     for i in range(np.size(p)):

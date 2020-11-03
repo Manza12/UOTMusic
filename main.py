@@ -14,8 +14,11 @@ import time
 import scipy.io.wavfile as wav
 import sys
 
+plt.ion()
+plt.show()
+
 PLOT_MARGINALS = False
-PLOT_FIGURES = False
+PLOT_FIGURES = True
 PLOT_FREQUENCIES = False
 PLOT_AMPLITUDES = False
 
@@ -23,7 +26,7 @@ SAVE_INTERPOLATIONS = True
 SAVE_FIGURES = True
 SAVE_SOUND = True
 
-PLAY_SOUND = True
+PLAY_SOUND = False
 
 NOTE_MIN = -12*3
 NOTE_MAX = 12*3
@@ -46,7 +49,7 @@ def plot_figures():
         plt.ylim(AMPL_MIN, AMPL_MAX)
         if AMPL_LOG:
             plt.yscale('log')
-        fig.canvas.manager.window.wm_geometry('+500+150')
+        # fig.canvas.manager.window.wm_geometry('+500+150')
 
         if SAVE_INTERPOLATIONS:
             path_to_interpolations = path.join(path_result, 'interpolations')
@@ -117,7 +120,7 @@ def plot_amplitudes():
     plt.plot(t_synthesis, np.transpose(amplitudes_tensor))
     plt.xlabel("Time (s)")
     plt.ylabel("Amplitudes")
-    plt.ylim(0, 1)
+    # plt.ylim(0, 1)
     if AMPL_LOG:
         plt.yscale('log')
     plt.title("Amplitudes respect to time")
@@ -130,10 +133,10 @@ def plot_amplitudes():
 
 if __name__ == '__main__':
     # Create folder
-    name = "test_piptrack"
+    name = "test_boulon"
     path_result = path.join(RESULTS_PATH, name)
     Path(path_result).mkdir(parents=True, exist_ok=True)
-    sys.stdout = open(path.join(path_result, name + '.log'), 'w')
+    # sys.stdout = open(path.join(path_result, name + '.log'), 'w')
 
     # Time
     time_start = time.time()
@@ -143,11 +146,11 @@ if __name__ == '__main__':
 
     # Source sound
     source_name = 'do2'
-    f_source, a_source = get_data(source_name, start=0.01, duration=1.)
+    f_source, a_source = np.array([440,660]), np.array([0.5,0.25])#get_data(source_name, start=0.01, duration=1.)
 
     # Target sound
     target_name = 'lam'
-    f_target, a_target = get_data(target_name, start=0.01, duration=1.)
+    f_target, a_target = np.array([520,790]), np.array([0.6,0.15])#get_data(target_name, start=0.01, duration=1.)
 
     # Convert to notes
     n_source = freq2note(f_source)
@@ -168,7 +171,13 @@ if __name__ == '__main__':
     time_pre_scaling = time.time()
 
     # Scaling
-    u, v, gamma, errs = scaling(cost, a_source, a_target, lam=1e-2, rho=1, tol=1e-14)
+    u, v, gamma, errs = scaling(cost, a_source, a_target, lam=LAMBDA, rho=RHO, tol=TOL)
+
+    # Plot gamma
+    plt.figure()
+    # plt.pcolor(n_source, n_target, np.log(np.transpose(gamma)))
+    plt.imshow(np.log(np.transpose(gamma)),origin='lower',cmap='hot',vmin=-7)
+    plt.title("Calibration measure $\\gamma$")
 
     # Time
     time_post_scaling = time.time()
@@ -191,8 +200,8 @@ if __name__ == '__main__':
         plot_marginals()
 
     time_pre_interp = time.time()
-    a_interp, n_interp = conic_interp_measures(n_source, n_target, a_source, a_target, ts, lam=1e-2, tol=1e-14,
-                                               thr=1e-14)
+    a_interp, n_interp = conic_interp_measures(n_source, n_target, a_source, a_target, ts, lam=LAMBDA, tol=TOL,
+                                               thr=THR)
     # Time
     time_post_interp = time.time()
     print("Time to compute interpolations:", round(time_post_interp - time_pre_interp, 3), "seconds.")

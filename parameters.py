@@ -7,7 +7,7 @@ DURATION_SYNTHESIS = 4
 N = FS * DURATION_SYNTHESIS
 
 # Play audio
-MASTER_VOLUME = 1
+MASTER_VOLUME = .1
 
 # Frequencies
 REFERENCE_FREQUENCY = 440  # in Hertz
@@ -23,6 +23,10 @@ RESULTS_PATH = 'results'
 COST_TYPE = "square"
 CREATE_FIGURES = True
 STRAIGHT = True
+LAMBDA = 2e-5
+RHO = 1
+TOL = 1e-5
+THR = 1e-2
 
 # Computation
 EPSILON = np.finfo(float).eps
