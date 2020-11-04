@@ -1,6 +1,9 @@
 from pathlib import Path
-import numpy as np
 from parameters import *
+
+
+def create_data(freqs, mags):
+    return np.array(freqs), np.array(mags)
 
 
 def note2freq(note, reference_frequency=REFERENCE_FREQUENCY):

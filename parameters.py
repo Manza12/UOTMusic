@@ -23,10 +23,13 @@ RESULTS_PATH = 'results'
 COST_TYPE = "square"
 CREATE_FIGURES = True
 STRAIGHT = True
-LAMBDA = 2e-5
+LAMBDA = 1e-2
 RHO = 1
-TOL = 1e-5
+TOL = 1e-6
 THR = 1e-2
 
 # Computation
 EPSILON = np.finfo(float).eps
+
+# Logs
+WRITE_LOG_FILE = False

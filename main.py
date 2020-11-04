@@ -2,141 +2,43 @@
 # Unbalanced Optimal Transport for Sound Synthesis
 
 import scipy.interpolate as interp
-from pathlib import Path
+import pylab as plt
+from plot import plot_gamma, plot_marginals, plot_figures, plot_frequencies, plot_amplitudes
 from synthesis import phase_vocoder
 from play import play_sound
 from parameters import *
-from interpolation import create_cost, scaling, conic_interp_measures
-from utilities import freq2note, note2freq
-from piptrack import get_data
-import pylab as plt
+from interpolation import create_cost, scaling, music_interp_measures
+from utilities import freq2note, note2freq, create_data
 import time
 import scipy.io.wavfile as wav
 import sys
-
-plt.ion()
-plt.show()
 
 PLOT_MARGINALS = False
 PLOT_FIGURES = True
 PLOT_FREQUENCIES = False
 PLOT_AMPLITUDES = False
+PLOT_GAMMA = True
 
 SAVE_INTERPOLATIONS = True
 SAVE_FIGURES = True
 SAVE_SOUND = True
 
-PLAY_SOUND = False
+PLAY_SOUND = True
 
-NOTE_MIN = -12*3
-NOTE_MAX = 12*3
-AMPL_MIN = 1e-4
-AMPL_MAX = 1
-
-AMPL_LOG = True
-
-
-def plot_figures():
-    for k in range(np.size(a_interp, 1)):
-        fig = plt.figure(figsize=[6, 4])
-        plt.stem(n_source, a_source, linefmt="C0", markerfmt="C0o", label="\\mu", basefmt="k",
-                 use_line_collection=True)
-        plt.stem(n_target, a_target, linefmt="C3", markerfmt="C3o", label="\\nu", basefmt="k",
-                 use_line_collection=True)
-        plt.stem(n_interp[:, k], a_interp[:, k], linefmt="k", markerfmt="ko", label="\\mu_t", basefmt="k",
-                 use_line_collection=True)
-        plt.xlim(NOTE_MIN, NOTE_MAX)
-        plt.ylim(AMPL_MIN, AMPL_MAX)
-        if AMPL_LOG:
-            plt.yscale('log')
-        # fig.canvas.manager.window.wm_geometry('+500+150')
-
-        if SAVE_INTERPOLATIONS:
-            path_to_interpolations = path.join(path_result, 'interpolations')
-            Path(path_to_interpolations).mkdir(parents=True, exist_ok=True)
-            plt.savefig(path.join(path_to_interpolations, "interp_" + str(k) + ".png"))
-
-    plt.show()
-
-
-def plot_marginals():
-    plt.figure(1, figsize=[6, 4])
-
-    plt.subplot(211)
-    plt.stem(n_source, a_source, linefmt="C0", markerfmt="C0o", label="\\mu", basefmt="k",
-             use_line_collection=True)
-    plt.stem(n_target, a_target, linefmt="C2", markerfmt="C2o", label="\\nu", basefmt="k",
-             use_line_collection=True)
-    plt.xlabel("Note")
-    plt.ylabel("Amplitude")
-    plt.legend(["$\\mu$", "$\\nu$"])
-    plt.xlim(NOTE_MIN, NOTE_MAX)
-    plt.ylim(AMPL_MIN, AMPL_MAX)
-    if AMPL_LOG:
-        plt.yscale('log')
-    plt.title("Source and target Dirac's $(\\mu, \\nu)$")
-
-    plt.subplot(212)
-    plt.stem(n_source, first_marginal, linefmt="C1", markerfmt="C1o", label="\\mu_0", basefmt="k",
-             use_line_collection=True)
-    plt.stem(n_target, second_marginal, linefmt="C3", markerfmt="C3o", label="\\nu_0", basefmt="k",
-             use_line_collection=True)
-    plt.xlabel("Note")
-    plt.ylabel("Amplitude")
-    plt.legend(["$\\mu_0$", "$\\nu_0$"])
-    plt.xlim(NOTE_MIN, NOTE_MAX)
-    plt.ylim(AMPL_MIN, AMPL_MAX)
-    if AMPL_LOG:
-        plt.yscale('log')
-    plt.title("Approximations marginals $(\\mu_0, \\nu_0)$")
-
-    plt.tight_layout()
-
-    if SAVE_FIGURES:
-        path_to_figures = path.join(path_result, 'figures')
-        Path(path_to_figures).mkdir(parents=True, exist_ok=True)
-        plt.savefig(path.join(path_to_figures, "marginals.png"))
-
-    plt.show()
-
-
-def plot_frequencies():
-    plt.figure()
-    plt.plot(t_synthesis, np.transpose(frequencies_tensor))
-    plt.xlabel("Time (s)")
-    plt.ylabel("Frequencies (Hz)")
-    plt.ylim(250, 2500)
-    plt.yscale('log')
-    plt.title("Frequencies respect to time")
-    if SAVE_FIGURES:
-        path_to_figures = path.join(path_result, 'figures')
-        Path(path_to_figures).mkdir(parents=True, exist_ok=True)
-        plt.savefig(path.join(path_to_figures, "frequencies.png"))
-    plt.show()
-
-
-def plot_amplitudes():
-    plt.figure()
-    plt.plot(t_synthesis, np.transpose(amplitudes_tensor))
-    plt.xlabel("Time (s)")
-    plt.ylabel("Amplitudes")
-    # plt.ylim(0, 1)
-    if AMPL_LOG:
-        plt.yscale('log')
-    plt.title("Amplitudes respect to time")
-    if SAVE_FIGURES:
-        path_to_figures = path.join(path_result, 'figures')
-        Path(path_to_figures).mkdir(parents=True, exist_ok=True)
-        plt.savefig(path.join(path_to_figures, "amplitudes.png"))
-    plt.show()
-
+RUNNING_SHELL = False
 
 if __name__ == '__main__':
     # Create folder
-    name = "test_boulon"
+    name = "test_gon"
     path_result = path.join(RESULTS_PATH, name)
-    Path(path_result).mkdir(parents=True, exist_ok=True)
-    # sys.stdout = open(path.join(path_result, name + '.log'), 'w')
+
+    # Activate plots
+    if RUNNING_SHELL:
+        plt.ion()
+        plt.show()
+
+    if WRITE_LOG_FILE:
+        sys.stdout = open(path.join(path_result, name + '.log'), 'w')
 
     # Time
     time_start = time.time()
@@ -146,11 +48,11 @@ if __name__ == '__main__':
 
     # Source sound
     source_name = 'do2'
-    f_source, a_source = np.array([440,660]), np.array([0.5,0.25])#get_data(source_name, start=0.01, duration=1.)
+    f_source, a_source = create_data([440, 880], [0.5, 0.25])  # get_data(source_name, start=0.01, duration=1.)
 
     # Target sound
     target_name = 'lam'
-    f_target, a_target = np.array([520,790]), np.array([0.6,0.15])#get_data(target_name, start=0.01, duration=1.)
+    f_target, a_target = create_data([520, 790], [0.6, 0.15])  # get_data(target_name, start=0.01, duration=1.)
 
     # Convert to notes
     n_source = freq2note(f_source)
@@ -173,11 +75,9 @@ if __name__ == '__main__':
     # Scaling
     u, v, gamma, errs = scaling(cost, a_source, a_target, lam=LAMBDA, rho=RHO, tol=TOL)
 
-    # Plot gamma
-    plt.figure()
-    # plt.pcolor(n_source, n_target, np.log(np.transpose(gamma)))
-    plt.imshow(np.log(np.transpose(gamma)),origin='lower',cmap='hot',vmin=-7)
-    plt.title("Calibration measure $\\gamma$")
+    # Plot transport plan
+    if PLOT_GAMMA:
+        plot_gamma(gamma)
 
     # Time
     time_post_scaling = time.time()
@@ -197,17 +97,19 @@ if __name__ == '__main__':
     print("Second marginal error:", second_marginal_error)
 
     if PLOT_MARGINALS:
-        plot_marginals()
+        plot_marginals(n_source, a_source, n_target, a_target, first_marginal, second_marginal, path_result,
+                       save_figures=SAVE_FIGURES)
 
     time_pre_interp = time.time()
-    a_interp, n_interp = conic_interp_measures(n_source, n_target, a_source, a_target, ts, lam=LAMBDA, tol=TOL,
+    a_interp, n_interp = music_interp_measures(n_source, n_target, a_source, a_target, ts, lam=LAMBDA, tol=TOL,
                                                thr=THR)
     # Time
     time_post_interp = time.time()
     print("Time to compute interpolations:", round(time_post_interp - time_pre_interp, 3), "seconds.")
 
     if PLOT_FIGURES:
-        plot_figures()
+        plot_figures(n_source, a_source, n_target, a_target, n_interp, a_interp, path_result,
+                     save_interpolations=SAVE_INTERPOLATIONS)
 
     # Create the frequencies and the amplitudes
     interpolator_frequencies = interp.interp1d(ts * DURATION_SYNTHESIS, note2freq(n_interp),
@@ -219,10 +121,10 @@ if __name__ == '__main__':
     amplitudes_tensor = interpolator_amplitudes(t_synthesis)
 
     if PLOT_FREQUENCIES:
-        plot_frequencies()
+        plot_frequencies(t_synthesis, frequencies_tensor, path_result, save_figures=SAVE_FIGURES)
 
     if PLOT_AMPLITUDES:
-        plot_amplitudes()
+        plot_amplitudes(t_synthesis, amplitudes_tensor, path_result, save_figures=SAVE_FIGURES)
 
     # Generate the sound
     y = phase_vocoder(frequencies_tensor, amplitudes_tensor)

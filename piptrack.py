@@ -1,4 +1,3 @@
-import numpy as np
 import scipy.io.wavfile as wav
 from parameters import *
 import matplotlib.pyplot as plt

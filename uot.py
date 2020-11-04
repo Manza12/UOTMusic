@@ -1,4 +1,3 @@
-import numpy as np
 import pylab as plt
 from parameters import *
 from utilities import create_random_dirac
