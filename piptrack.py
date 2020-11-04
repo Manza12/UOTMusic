@@ -5,13 +5,24 @@ import util
 from utilities import to_mono
 
 
-def get_data(file_name, start=0., duration=1., threshold=THRESHOLD_PIPTRACK):
+def get_data(file_name, start=0., duration=1., threshold=THRESHOLD_PIPTRACK, plot_spectrum=False):
     y_segment = get_segment(file_name, start=start, duration=duration)
     spectrum = np.abs(np.fft.fft(y_segment)) * (2 / len(y_segment))
     spectrum_pos = spectrum[0:len(spectrum) // 2 + 1]
-    pitches, mags = piptrack(spectrum_pos, sr=44100, threshold=threshold, sub_threshold=0.001)
+    pitches, mags = piptrack(spectrum_pos, sr=FS, threshold=threshold, sub_threshold=0.001)
     frequencies = pitches[np.nonzero(pitches)]
     amplitudes = mags[np.nonzero(pitches)]
+
+    if plot_spectrum:
+        freqs = np.linspace(0, FS / 2, int(len(spectrum) // 2) + 1, endpoint=True)
+
+        plt.figure()
+        plt.plot(freqs, spectrum_pos)
+        plt.xscale('log')
+        plt.scatter(pitches[np.nonzero(pitches)], mags[np.nonzero(pitches)], color='red')
+
+        plt.show()
+
     return frequencies, amplitudes
 
 
@@ -112,10 +123,10 @@ if __name__ == '__main__':
     _spectrum_pos = _spectrum[0:len(_spectrum) // 2 + 1]
     _pitches, _mags = piptrack(_spectrum_pos, sr=44100, threshold=.1, sub_threshold=0.001)
 
-    freqs = np.linspace(0, FS / 2, int(len(_spectrum) // 2) + 1, endpoint=True)
+    _freqs = np.linspace(0, FS / 2, int(len(_spectrum) // 2) + 1, endpoint=True)
 
     plt.figure(1)
-    plt.plot(freqs, _spectrum_pos)
+    plt.plot(_freqs, _spectrum_pos)
     plt.xscale('log')
     plt.scatter(_pitches[np.nonzero(_pitches)], _mags[np.nonzero(_pitches)], color='green')
 

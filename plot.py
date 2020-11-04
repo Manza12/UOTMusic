@@ -1,30 +1,42 @@
 import pylab as plt
 from parameters import *
+from utilities import note2freq
 from pathlib import Path
-from main import RUNNING_SHELL
+from parameters import RUNNING_SHELL
 
-NOTE_MIN = -12*3
-NOTE_MAX = 12*3
 AMPL_MIN = 1e-4
 AMPL_MAX = 1
 
 AMPL_LOG = True
 
 
-def plot_figures(n_source, a_source, n_target, a_target, n_interp, a_interp, path_result,
-                 save_interpolations=True):
+def plot_interpolations(n_source, a_source, n_target, a_target, n_interp, a_interp, path_result,
+                        save_interpolations=True):
+    freq_source = note2freq(n_source)
+    freq_target = note2freq(n_target)
+
+    min_freq = min(np.min(freq_source), np.min(freq_target))
+    max_freq = max(np.max(freq_source), np.max(freq_target))
+
     for k in range(np.size(a_interp, 1)):
         fig = plt.figure(figsize=[6, 4])
-        plt.stem(n_source, a_source, linefmt="C0", markerfmt="C0o", label="\\mu", basefmt="k",
+
+        freq_interp = note2freq(n_interp[:, k])
+
+        plt.stem(freq_source, a_source, linefmt="C0", markerfmt="C0o", label="\\mu", basefmt="k",
                  use_line_collection=True)
-        plt.stem(n_target, a_target, linefmt="C3", markerfmt="C3o", label="\\nu", basefmt="k",
+        plt.stem(freq_target, a_target, linefmt="C3", markerfmt="C3o", label="\\nu", basefmt="k",
                  use_line_collection=True)
-        plt.stem(n_interp[:, k], a_interp[:, k], linefmt="k", markerfmt="ko", label="\\mu_t", basefmt="k",
+        plt.stem(freq_interp, a_interp[:, k], linefmt="k", markerfmt="ko", label="\\mu_t", basefmt="k",
                  use_line_collection=True)
-        plt.xlim(NOTE_MIN, NOTE_MAX)
+
+        plt.xlim(min_freq*0.9, max_freq*1.1)
+        plt.xscale('log')
+
         plt.ylim(AMPL_MIN, AMPL_MAX)
         if AMPL_LOG:
             plt.yscale('log')
+
         if not RUNNING_SHELL:
             fig.canvas.manager.window.wm_geometry('+500+150')
 
@@ -39,33 +51,52 @@ def plot_figures(n_source, a_source, n_target, a_target, n_interp, a_interp, pat
 def plot_marginals(n_source, a_source, n_target, a_target, first_marginal, second_marginal, path_result,
                    save_figures=True):
     plt.figure(1, figsize=[6, 4])
-
     plt.subplot(211)
-    plt.stem(n_source, a_source, linefmt="C0", markerfmt="C0o", label="\\mu", basefmt="k",
+
+    freq_source = note2freq(n_source)
+    plt.stem(freq_source, a_source, linefmt="C0", markerfmt="C0o", label="\\mu", basefmt="k",
              use_line_collection=True)
-    plt.stem(n_target, a_target, linefmt="C2", markerfmt="C2o", label="\\nu", basefmt="k",
+
+    freq_target = note2freq(n_target)
+    plt.stem(freq_target, a_target, linefmt="C2", markerfmt="C2o", label="\\nu", basefmt="k",
              use_line_collection=True)
+
+    min_freq = min(np.min(freq_source), np.min(freq_target))
+    max_freq = max(np.max(freq_source), np.max(freq_target))
+
     plt.xlabel("Note")
+    plt.xlim(min_freq, max_freq)
+    plt.xscale('log')
+
     plt.ylabel("Amplitude")
+
     plt.legend(["$\\mu$", "$\\nu$"])
-    plt.xlim(NOTE_MIN, NOTE_MAX)
-    plt.ylim(AMPL_MIN, AMPL_MAX)
+
     if AMPL_LOG:
+        plt.ylim(AMPL_MIN, AMPL_MAX)
         plt.yscale('log')
+    else:
+        plt.ylim(0, 1)
+
     plt.title("Source and target Dirac's $(\\mu, \\nu)$")
 
     plt.subplot(212)
-    plt.stem(n_source, first_marginal, linefmt="C1", markerfmt="C1o", label="\\mu_0", basefmt="k",
+    plt.stem(freq_source, first_marginal, linefmt="C1", markerfmt="C1o", label="\\mu_0", basefmt="k",
              use_line_collection=True)
-    plt.stem(n_target, second_marginal, linefmt="C3", markerfmt="C3o", label="\\nu_0", basefmt="k",
+    plt.stem(freq_target, second_marginal, linefmt="C3", markerfmt="C3o", label="\\nu_0", basefmt="k",
              use_line_collection=True)
+
     plt.xlabel("Note")
     plt.ylabel("Amplitude")
     plt.legend(["$\\mu_0$", "$\\nu_0$"])
-    plt.xlim(NOTE_MIN, NOTE_MAX)
+
+    plt.xlim(min_freq, max_freq)
+    plt.xscale('log')
+
     plt.ylim(AMPL_MIN, AMPL_MAX)
     if AMPL_LOG:
         plt.yscale('log')
+
     plt.title("Approximations marginals $(\\mu_0, \\nu_0)$")
 
     plt.tight_layout()
@@ -111,7 +142,7 @@ def plot_amplitudes(t_synthesis, amplitudes_tensor, path_result, save_figures=Tr
     plt.show()
 
 
-def plot_gamma(transport_plan, log_scale=False):
+def plot_gamma(transport_plan, log_scale=AMPL_LOG):
     plt.figure()
 
     if log_scale:
@@ -119,7 +150,7 @@ def plot_gamma(transport_plan, log_scale=False):
         plt.imshow(z, vmin=-7, cmap='Greys', origin='lower')
     else:
         z = np.transpose(transport_plan)
-        plt.imshow(z, vmin=0, vmax=1, cmap='Greys', origin='lower')
+        plt.imshow(z, vmin=0, vmax=np.max(z), cmap='Greys', origin='lower')
 
     plt.title("Transport plan")
 

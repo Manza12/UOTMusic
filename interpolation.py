@@ -74,11 +74,7 @@ def log_interp(a, b, t):
     return np.exp(np.log(a) * t + np.log(b) * (1 - t))
 
 
-def music_interp_measures(xs, ys, p, q, ts, lam=LAMBDA, tol=TOL, rho=RHO, thr=THR):
-    cost = create_cost(xs, ys)
-
-    u, v, gamma, errs = scaling(cost, p, q, lam=lam, rho=rho, tol=tol)
-
+def music_interp_measures(ts, xs, ys, u, v, gamma, thr=THR):
     gamma_a = gamma * np.expand_dims(np.exp(u), 1)
     gamma_b = gamma * np.expand_dims(np.exp(v), 0)
 
@@ -87,21 +83,12 @@ def music_interp_measures(xs, ys, p, q, ts, lam=LAMBDA, tol=TOL, rho=RHO, thr=TH
     x = np.zeros((np.sum(mask), np.size(ts)))
 
     k = 0
-    for i in range(np.size(p)):
-        for j in range(np.size(q)):
+    for i in range(np.size(u)):
+        for j in range(np.size(v)):
             if mask[i, j]:
-                a[k, :] = log_interp(gamma_a[i, j], gamma_b[i, j], ts)
+                a[k, :] = log_interp(gamma_b[i, j], gamma_a[i, j], ts)
                 x[k, :] = xs[i] + ts * (ys[j] - xs[i])
                 k = k + 1
-
-    for i in range(np.size(p)):
-        if np.sum(gamma_a[i, :]) / p[i] > 1:  # mass disappears
-            a = np.concatenate((a, (1. - np.expand_dims(ts, 0)) * p[i]), axis=0)
-            x = np.concatenate((x, xs[i] * np.ones((1, np.size(ts)))), axis=0)
-    for j in range(np.size(q)):
-        if np.sum(gamma_b[:, j]) / q[j] > 1:  # mass appears
-            a = np.concatenate((a, np.expand_dims(ts, 0) * q[j]), axis=0)
-            x = np.concatenate((x, ys[j] * np.ones((1, np.size(ts)))), axis=0)
 
     return a, x
 

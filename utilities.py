@@ -17,12 +17,13 @@ def freq2note(freq, reference_frequency=REFERENCE_FREQUENCY):
 
 
 def to_mono(y):
-    if np.size(y, 1) == 2:
-        return (y[:, 0] + y[:, 1]) / 2
-    elif np.size(y, 1) == 1:
-        return y
+    if not len(np.shape(y)) == 1:
+        if np.size(y, 1) == 2:
+            return (y[:, 0] + y[:, 1]) / 2
+        else:
+            raise ValueError("No mono nor stereo.")
     else:
-        raise ValueError("To mono nor stereo.")
+        return y
 
 
 def create_dir(dir_name):

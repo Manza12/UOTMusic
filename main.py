@@ -1,23 +1,25 @@
-# This is the main script from the project:
-# Unbalanced Optimal Transport for Sound Synthesis
+""" This is the main script from the project:
+Unbalanced Optimal Transport for Sound Synthesis """
 
 import scipy.interpolate as interp
 import pylab as plt
-from plot import plot_gamma, plot_marginals, plot_figures, plot_frequencies, plot_amplitudes
+from plot import plot_gamma, plot_marginals, plot_interpolations, plot_frequencies, plot_amplitudes
 from synthesis import phase_vocoder
 from play import play_sound
 from parameters import *
 from interpolation import create_cost, scaling, music_interp_measures
+from piptrack import get_data
 from utilities import freq2note, note2freq, create_data
 import time
 import scipy.io.wavfile as wav
 import sys
 
 PLOT_MARGINALS = False
-PLOT_FIGURES = True
+PLOT_FIGURES = False
 PLOT_FREQUENCIES = False
 PLOT_AMPLITUDES = False
-PLOT_GAMMA = True
+PLOT_GAMMA = False
+PLOT_SPECTRUM = False
 
 SAVE_INTERPOLATIONS = True
 SAVE_FIGURES = True
@@ -25,11 +27,9 @@ SAVE_SOUND = True
 
 PLAY_SOUND = True
 
-RUNNING_SHELL = False
-
 if __name__ == '__main__':
     # Create folder
-    name = "test_gon"
+    name = "violin2oboe"
     path_result = path.join(RESULTS_PATH, name)
 
     # Activate plots
@@ -47,12 +47,14 @@ if __name__ == '__main__':
     t_synthesis = np.arange(0, N) / FS
 
     # Source sound
-    source_name = 'do2'
-    f_source, a_source = create_data([440, 880], [0.5, 0.25])  # get_data(source_name, start=0.01, duration=1.)
+    source_name = 'A4_violin'
+    f_source, a_source = get_data(source_name, start=1., duration=1, plot_spectrum=PLOT_SPECTRUM)
+    # create_data([440, 660], [0.5, 0.25])
 
     # Target sound
-    target_name = 'lam'
-    f_target, a_target = create_data([520, 790], [0.6, 0.15])  # get_data(target_name, start=0.01, duration=1.)
+    target_name = 'A4_oboe'
+    f_target, a_target = get_data(target_name, start=1., duration=1, plot_spectrum=PLOT_SPECTRUM)
+    # create_data([520, 790], [0.6, 0.15])
 
     # Convert to notes
     n_source = freq2note(f_source)
@@ -75,13 +77,13 @@ if __name__ == '__main__':
     # Scaling
     u, v, gamma, errs = scaling(cost, a_source, a_target, lam=LAMBDA, rho=RHO, tol=TOL)
 
-    # Plot transport plan
-    if PLOT_GAMMA:
-        plot_gamma(gamma)
-
     # Time
     time_post_scaling = time.time()
     print("Time to compute scaling:", round(time_post_scaling - time_pre_scaling, 3), "seconds.")
+
+    # Plot transport plan
+    if PLOT_GAMMA:
+        plot_gamma(gamma)
 
     gamma_a = gamma * np.expand_dims(np.exp(u), 1)
     gamma_b = gamma * np.expand_dims(np.exp(v), 0)
@@ -100,16 +102,19 @@ if __name__ == '__main__':
         plot_marginals(n_source, a_source, n_target, a_target, first_marginal, second_marginal, path_result,
                        save_figures=SAVE_FIGURES)
 
+    # Time
     time_pre_interp = time.time()
-    a_interp, n_interp = music_interp_measures(n_source, n_target, a_source, a_target, ts, lam=LAMBDA, tol=TOL,
-                                               thr=THR)
+
+    # Interpolation
+    a_interp, n_interp = music_interp_measures(ts, n_source, n_target, u, v, gamma)
+
     # Time
     time_post_interp = time.time()
     print("Time to compute interpolations:", round(time_post_interp - time_pre_interp, 3), "seconds.")
 
     if PLOT_FIGURES:
-        plot_figures(n_source, a_source, n_target, a_target, n_interp, a_interp, path_result,
-                     save_interpolations=SAVE_INTERPOLATIONS)
+        plot_interpolations(n_source, a_source, n_target, a_target, n_interp, a_interp, path_result,
+                            save_interpolations=SAVE_INTERPOLATIONS)
 
     # Create the frequencies and the amplitudes
     interpolator_frequencies = interp.interp1d(ts * DURATION_SYNTHESIS, note2freq(n_interp),
