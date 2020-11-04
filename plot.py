@@ -1,6 +1,7 @@
 import pylab as plt
 from parameters import *
 from pathlib import Path
+from main import RUNNING_SHELL
 
 NOTE_MIN = -12*3
 NOTE_MAX = 12*3
@@ -24,7 +25,8 @@ def plot_figures(n_source, a_source, n_target, a_target, n_interp, a_interp, pat
         plt.ylim(AMPL_MIN, AMPL_MAX)
         if AMPL_LOG:
             plt.yscale('log')
-        fig.canvas.manager.window.wm_geometry('+500+150')
+        if not RUNNING_SHELL:
+            fig.canvas.manager.window.wm_geometry('+500+150')
 
         if save_interpolations:
             path_to_interpolations = path.join(path_result, 'interpolations')
